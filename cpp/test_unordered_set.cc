@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-
+#include <queue>
 // 自定义的key类型
 struct S {
     std::string first_name;
@@ -35,22 +35,25 @@ struct std::hash<S> {
 
 // -----------------------------------------------------------------------
 
-template<>
-struct std::less<S> {
-    bool operator()(const S& lhs, const S& rhs) const {
-        if(lhs.first_name != rhs.first_name) {
-            return lhs.first_name < rhs.first_name;
-        }
-        return lhs.second_name < rhs.second_name;
-    }
-};
+// 像set、sort等需要重载小于号的，下面两种方法都可行，不过更建议第二种方法
 
-// bool operator<(const S& lhs, const S& rhs) {
-//     if(lhs.first_name != rhs.first_name) {
-//         return lhs.first_name < rhs.first_name;
+
+// template<>
+// struct std::less<S> {
+//     bool operator()(const S& lhs, const S& rhs) const {
+//         if(lhs.first_name != rhs.first_name) {
+//             return lhs.first_name < rhs.first_name;
+//         }
+//         return lhs.second_name < rhs.second_name;
 //     }
-//     return lhs.second_name < rhs.second_name;
-// }
+// };
+
+bool operator<(const S& lhs, const S& rhs) {
+    if(lhs.first_name != rhs.first_name) {
+        return lhs.first_name < rhs.first_name;
+    }
+    return lhs.second_name < rhs.second_name;
+}
 
 int main() {
     std::unordered_set<S> names = {{"A1", "A2"}, {"B1", "B2"}, {"C1", "C2"}};
@@ -66,8 +69,22 @@ int main() {
     }
 
     std::vector<S> vec = {{"B1", "B2"}, {"C1", "C2"}, {"A1", "A2"}};
-    std::sort(vec.begin(), vec.end(), std::less<S>{}); // 这个需要仿函数，而不仅仅是类型
+    // std::sort(vec.begin(), vec.end(), std::less<S>{}); // 这个需要仿函数，而不仅仅是类型 OK
+    std::sort(vec.begin(), vec.end()); // 这个需要仿函数，而不仅仅是类型    OK
     for(auto const &s : vec) {
         std::cout << s.first_name << ' ' << s.second_name << std::endl;
     }
+
+    // 对于优先队列，也仅仅需要重载operator< 即可～～
+    std::priority_queue<S> pq;
+    for(auto const &s : names) {
+        pq.push(s);
+    }
+
+    while(pq.size()) {
+        auto s = pq.top();
+        std::cout << s.first_name << ' ' << s.second_name << std::endl;
+        pq.pop();
+    }
+
 }
